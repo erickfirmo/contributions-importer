@@ -27,7 +27,7 @@ class Importer:
         # Maximum number of changes per file. By default for each change (line of code changed, added or removed) a
         # line of mock code is changed. This would limit the number of generated mock code for extreme cases where too
         # many lines of codes are changes (e.g. SQL database dump).
-        self.max_changes_per_file = 100
+        self.max_changes_per_file = 10000
 
         # If commit_max_changes is a positive number, a commit could be break in several ones.
         # In that case this value decides how long these commits could go in the past. The idea
@@ -44,7 +44,7 @@ class Importer:
         self.ignored_file_types = []
 
         # In case the settings above are too crazy it doesn't commit too much (the array is to have a random value instead of a specific one)
-        self.max_commits_per_day = [10,15]
+        self.max_commits_per_day = [500,1000]
 
         # Ignore all the commits before this date, in order to analyze same repositories over time
         self.ignore_before_date = None
