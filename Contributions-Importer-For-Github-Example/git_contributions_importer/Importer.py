@@ -9,6 +9,7 @@ from .Committer import Committer
 from .Content import Content
 from .generators import apply
 
+import sys
 
 class Importer:
 
@@ -61,19 +62,20 @@ class Importer:
         self.content = Content(mock_repo.working_tree_dir)
         self.committer = Committer(mock_repo, self.content)
 
+        self.fuse_time = (60 * 60 * 3)
+
     def import_repository(self):
         commits_for_last_day = 0
 
         if self.start_from_last:
-            last_committed_date = self.committer.get_last_commit_date()
+            last_committed_date = (self.committer.get_last_commit_date() - self.fuse_time)
             print('\nStarting from last commit: ' + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(last_committed_date)))
         else:
             print('\nStarting')
             last_committed_date = 0
 
-        for c in self.get_all_commits(last_committed_date+1):
-            print('\nAnalysing commit at ' + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(c.committed_date)))
-
+        for c in self.get_all_commits((last_committed_date+1)):
+            print('\nAnalysing commit at ' + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(c.committed_date - self.fuse_time)))
             if self.author is not None:
                 if isinstance(self.author, list):
                     found = False
@@ -85,7 +87,7 @@ class Importer:
                     print('    Commit skipped because the author is: ' + c.author.email)
                     continue
 
-            committed_date = c.committed_date
+            committed_date = (c.committed_date - self.fuse_time)
             if self.commit_time_max_past > 0:
                 committed_date -= int(random() * self.commit_time_max_past)
                 print('    Commit date changed to: ' + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(c.committed_date)))
@@ -130,12 +132,12 @@ class Importer:
         for repo in self.repos:
             for b in repo.branches:
                 for c in repo.iter_commits(b.name):
-                    if c.committed_date < ignore_before_date or (self.ignore_before_date != None and c.committed_date < self.ignore_before_date): 
+                    if (c.committed_date - self.fuse_time) < ignore_before_date or (self.ignore_before_date != None and (c.committed_date - self.fuse_time) < self.ignore_before_date):
                         continue
                     if c.hexsha not in s:
                         s.add(c.hexsha)
                         commits.append(c)
-        commits.sort(key=lambda c: c.committed_date)
+        commits.sort(key=lambda c: (c.committed_date - self.fuse_time))
         return commits
 
     ''' for a specific commit it gets all the changed files '''
